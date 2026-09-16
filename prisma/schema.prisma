@@ -1,0 +1,199 @@
+// RainGuard-AI / Flood-AI System — Prisma schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model WeatherStation {
+  id          String   @id @default(cuid())
+  stationCode String   @unique
+  name        String
+  latitude    Float
+  longitude   Float
+  elevationM  Float?
+  source      String   @default("open-meteo")
+  isDevData   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  observations WeatherObservation[]
+  rainfallData RainfallRecord[]
+
+  @@index([latitude, longitude])
+}
+
+model WeatherObservation {
+  id              String   @id @default(cuid())
+  stationId       String
+  observationTime DateTime
+  temperatureC    Float?
+  humidityPercent Float?
+  pressureHpa     Float?
+  windSpeedMs     Float?
+  windDirectionDeg Float?
+  rainfallMm      Float?
+  weatherCode     Int?
+  cloudCoverPct   Float?
+  source          String   @default("open-meteo")
+  createdAt       DateTime @default(now())
+
+  station WeatherStation @relation(fields: [stationId], references: [id], onDelete: Cascade)
+
+  @@index([stationId, observationTime])
+  @@index([observationTime])
+}
+
+model RainfallRecord {
+  id               String   @id @default(cuid())
+  stationId        String?
+  latitude         Float
+  longitude        Float
+  observationTime  DateTime
+  rainfallMm       Float
+  durationMinutes  Int      @default(60)
+  source           String   @default("open-meteo")
+  isDevData       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  station WeatherStation? @relation(fields: [stationId], references: [id], onDelete: SetNull)
+
+  @@index([latitude, longitude])
+  @@index([observationTime])
+  @@index([source, observationTime])
+}
+
+model FloodPrediction {
+  id              String   @id @default(cuid())
+  cityId          String?
+  latitude        Float
+  longitude       Float
+  predictionTime  DateTime @default(now())
+  validTime      DateTime
+  horizonMinutes  Int
+
+  heavyRainProbability Float?
+  heavyRainClass       String?
+  heavyRainThreshold   Float?
+
+  forecastRainfallMm Float?
+
+  floodProbability Float?
+  riskLevel        String?
+
+  inundationDepthM      Float?
+  inundationAreaKm2    Float?
+  maxDepthM             Float?
+  meanDepthM            Float?
+
+  confidence       Float?
+  modelVersions    String
+  dataSources      String
+  modelName        String  @default("baseline")
+  modelVersion     String  @default("0.1.0-baseline")
+  isBaseline       Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  @@index([cityId, validTime])
+  @@index([predictionTime])
+  @@index([riskLevel])
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  alertId     String   @unique
+  level       String
+  status      String   @default("active")
+  title       String
+  cityId      String?
+  latitude    Float
+  longitude   Float
+  locationName String
+  reason      String
+  expectedRainfallMm Float?
+  floodProbability   Float?
+  expectedInundationM Float?
+  recommendedAction  String?
+  triggeredAt  DateTime @default(now())
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  expiredAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status, level])
+  @@index([triggeredAt])
+  @@index([cityId])
+}
+
+model ModelRegistry {
+  id                  String   @id @default(cuid())
+  modelName           String
+  modelVersion        String
+  modelType           String
+  trainingDatasetVersion String?
+  featureVersion      String?
+  trainedAt           DateTime?
+  isBaseline          Boolean  @default(true)
+  isTrainedOnLabels   Boolean  @default(false)
+  artifactPath        String?
+  notes               String?
+  createdAt           DateTime @default(now())
+
+  metrics ModelMetric[]
+
+  @@unique([modelName, modelVersion])
+}
+
+model ModelMetric {
+  id            String   @id @default(cuid())
+  modelId       String
+  metricName    String
+  metricValue   Float
+  evaluatedAt   DateTime @default(now())
+  split         String?
+  notes         String?
+
+  model ModelRegistry @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@index([modelId])
+}
+
+model PipelineRun {
+  id              String   @id @default(cuid())
+  pipelineName    String
+  status          String
+  startedAt       DateTime @default(now())
+  finishedAt      DateTime?
+  durationMs      Int?
+  recordsReceived Int      @default(0)
+  recordsValid    Int      @default(0)
+  recordsRejected Int      @default(0)
+  missingValues   Int      @default(0)
+  duplicates      Int      @default(0)
+  errorMessage    String?
+  source          String?
+  createdAt       DateTime @default(now())
+
+  @@index([pipelineName, startedAt])
+  @@index([status])
+}
+
+model DataQualityReport {
+  id              String   @id @default(cuid())
+  source          String
+  recordsReceived Int
+  recordsValid    Int
+  recordsRejected Int
+  missingValues   Int
+  duplicates      Int
+  generatedAt     DateTime @default(now())
+  pipelineRunId   String?
+
+  @@index([source, generatedAt])
+}

@@ -1,0 +1,97 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# env files (can opt-in for committing if needed)
+.env*
+
+# vercel
+.vercel
+
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+local-*
+.claude
+# runtime config
+*.log
+dev.log
+dev.out.log
+test
+prompt
+
+server.log
+# Skills directory
+/skills/
+# Database
+db/*.db
+db/*.db-journal
+
+# Mini-services Python artifacts
+mini-services/**/pretrained_weights/
+mini-services/**/*.pth
+mini-services/**/*.onnx
+mini-services/**/*.onnx.data
+mini-services/**/*.tar.gz
+mini-services/**/*.h5
+
+# ONNX models (too large for git)
+src/lib/flood-detection/models/*.onnx
+src/lib/flood-detection/models/*.onnx.data
+src/lib/cloudburst/models/*.onnx
+src/lib/cloudburst/models/*.onnx.data
+
+# Data files
+data/
+upload/
+download/
+
+# Sen1Floods11 sample data (large)
+data/sen1floods11/
+
+# Worklog
+worklog.md
+
+# Tool results
+tool-results/
+
+# Prisma generated
+prisma/migrations/
+
+# Caddy config (local)
+Caddyfile
+
+.env
+# build scripts
+tests/
+upload/
+worklog.md
